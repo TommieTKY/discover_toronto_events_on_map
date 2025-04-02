@@ -11,14 +11,14 @@ block main-content
     div
       button#filterButton.btn.btn-info Filter the date
 
-  div.text-center.text-success.fs-4
-    p Green markers indicate events happening in the upcoming week.
+  div.text-center
+    div.text-success.fs-4.d-inline-block
+      img(src="http://maps.google.com/mapfiles/ms/icons/green-dot.png" alt="Green Marker")
+      span Green markers indicate events happening in the upcoming week.
 
   div.px-5.mt-3
     div#map
   
-  script(async defer src=`https://maps.googleapis.com/maps/api/js?key=${mapApiKey}&callback=initMap&v=weekly&solution_channel=GMP_CCS_placedetails_v2`)
-
   script.
     function initMap() {
       const map = new google.maps.Map(document.getElementById("map"), {
@@ -75,8 +75,11 @@ block main-content
           upcomingWeek.setDate(today.getDate() + 7);
 
           const eventStartDate = new Date(data.startDate);
-          console.log(eventStartDate.toDateString())
-          const markerIcon = eventStartDate.toLocaleString() <= upcomingWeek.toLocaleString()
+
+          const eventDateOnly = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
+          const upcomingWeekDateOnly = new Date(upcomingWeek.getFullYear(), upcomingWeek.getMonth(), upcomingWeek.getDate());
+
+          const markerIcon = eventDateOnly <= upcomingWeekDateOnly
             ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
             : "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
 
@@ -124,18 +127,22 @@ block main-content
       showMarkers(markersData);
 
       document.getElementById("filterButton").addEventListener("click", () => {
-        const startDate = new Date(document.getElementById("startDate").value);
-        const endDate = new Date(document.getElementById("endDate").value);
+        const startInput = document.getElementById("startDate").value;
+        const endInput = document.getElementById("endDate").value;
 
-        if (!startDate || !endDate) return;
+        if (!startInput || !endInput) return;
 
         const filteredData = markersData.filter(e => {
           const eventStart = new Date(e.startDate);
           const eventEnd = new Date(e.endDate);
-          return eventStart >= startDate && eventEnd <= endDate;
+          const eventStartDateOnly = eventStart.toISOString().split('T')[0];
+          const eventEndDateOnly = eventEnd.toISOString().split('T')[0];
+          return eventStartDateOnly >= startInput && eventEndDateOnly <= endInput;
         });
         
         showMarkers(filteredData);
       });
     }
+
+  script(defer src=`https://maps.googleapis.com/maps/api/js?key=${mapApiKey}&callback=initMap&v=weekly&solution_channel=GMP_CCS_placedetails_v2`)
 
